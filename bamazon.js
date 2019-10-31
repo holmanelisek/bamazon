@@ -19,9 +19,11 @@ connection.connect(function(err) {
   start();
 });
 
+function start(){
+    run();
+}
 
-
-function start() {
+function run() {
     connection.query("SELECT * FROM products", function(err, results) {
         if (err) throw err;
         for(i=0;i<results.length;i++){
@@ -42,9 +44,9 @@ function start() {
         ])
         .then(function(answer){
             var selected = results[parseInt(answer.id)-1];
-            console.log(selected);
             if(selected.stock_quantity<answer.request){
                 console.log("Insufficient quantity. We only have "+selected.stock_quantity+" of "+answer.request);
+                startagain();
             }else{
                 var update = selected.stock_quantity - answer.request;
                 connection.query(
@@ -54,20 +56,33 @@ function start() {
                     if (err) throw err;
                     var cost = answer.request*selected.price;
                     console.log("You have purchased "+answer.request+" units for $"+ cost);
+                    startagain();
                 })
+                
             }
         }    )
 })
 }
-        //inquirer.prompt({}).then(function(answer){})
-            //what is the ID of the product you would like to purchase?
-            //how many units of [product] would you like to buy?
-            //query id from products
-                //if request>product
-                    //console log "Insufficient quantity!"
-                //else
-                    //update sql database with product-request
-                    //console log "You have purchased" request# item "for $" request*price 
+
+function startagain(){
+    inquirer
+                  .prompt({
+                    name: "startorend",
+                    type: "list",
+                    message: "Would you like to make another purchase or exit?",
+                    choices: ["PURCHASE", "EXIT"]
+                  })
+                  .then(function(answer) {
+                    if (answer.startorend === "PURCHASE") {
+                        start();
+                    }
+                    else if(answer.startorend === "EXIT") {
+                        connection.end();
+                    } else{
+                        connection.end();
+                    }
+                  });
+}
 
 
 
